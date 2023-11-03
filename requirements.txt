@@ -1,6 +1,6 @@
 scikit-image
 numpy
 scipy
-
+matplotlib
 # Only for data preparation and mnist dataset
 tensorflow
