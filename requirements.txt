@@ -2,5 +2,7 @@ scikit-image
 numpy
 scipy
 matplotlib
+gensim
 # Only for data preparation and mnist dataset
 tensorflow
+transformers==4.11.3
