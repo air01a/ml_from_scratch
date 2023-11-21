@@ -5,6 +5,7 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
 import matplotlib
 import matplotlib as mpl
 
@@ -97,6 +98,7 @@ data["Age"].fillna(data["Age"].mean(), inplace=True)
 data["Embarked"].fillna(0, inplace=True)
 data["Age"].astype(int)
 data=data.sample(frac=1).reset_index(drop=True)
+data['Age_cat'] = data['Age'].apply(lambda x: 1 if x > 18 else 0)
 age = data[["Age","Survived"]]
 
 ######################
@@ -121,6 +123,7 @@ poor = data.loc[(data.Pclass>1)]['Survived'].mean()
 print("###  Graph")
 #Graph
 fig, axs = plt.subplots(2, 3) 
+
 axs[0,0].bar(mean_age["Age"],mean_age['Survived'])
 axs[0,0].set_title("% de survie par age")
 axs[0,1].bar(count_age["Age"],count_age['Survived'])
@@ -179,7 +182,8 @@ print("Best Hyperparameters:", grid_search.best_params_)
 print("Best Score:", grid_search.best_score_)
 
 print("#####  Using best models")
-model = RandomForestClassifier(n_estimators=grid_search.best_params_['n_estimators'], max_depth=grid_search.best_params_['max_depth'], random_state=1)
+model = grid_search.best_estimator_
+#model = RandomForestClassifier(n_estimators=grid_search.best_params_['n_estimators'], max_depth=grid_search.best_params_['max_depth'], random_state=1)
 model.fit(X, y)
 
 print("\n\n###############################")
@@ -193,3 +197,22 @@ predictions = model.predict(X_test)
 error = (abs(test["Survived"] - predictions)).sum() / len(predictions)
 print("Error percentage %i %%" % int(error*100))
 
+importances = model.feature_importances_
+forest_importances = pd.Series(importances, index=features)
+fig, ax = plt.subplots()
+forest_importances.plot.bar(ax=ax)
+ax.set_title("Feature importances")
+ax.set_ylabel("% of importance")
+fig.tight_layout()
+
+
+conf_mat = confusion_matrix(test["Survived"], predictions)
+# Show correlation map
+fig, ax = plt.subplots()
+im, cbar = heatmap(conf_mat, [0,1], [0,1], ax=ax,
+                   cmap="YlGn", cbarlabel="Heat map")
+texts = annotate_heatmap(im, valfmt="{x:.1f} ")
+plt.tight_layout()
+plt.show()
+
+#y_proba = model.predict_proba(X_test)
